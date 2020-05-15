@@ -1,0 +1,22 @@
+kind: pipeline
+name: default
+
+steps:
+- name: build-binary
+  image: golang:1.14
+  commands:
+    - go env -w GO111MODULE="auto"
+    - git clone https://github.com/caddyserver/xcaddy.git
+    - cd xcaddy/cmd/xcaddy
+    - go build
+    - ./xcaddy build --with github.com/caddy-dns/cloudflare
+  when:
+    event: tag
+- name: publish
+  image: plugins/github-release
+  settings:
+    api_key:
+      from_secret: github_token
+    files: xcaddy/cmd/xcaddy/caddy
+  when:
+    event: tag
